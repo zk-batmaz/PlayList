@@ -12,12 +12,19 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.qbra.playlist.data.AuthRepositoryImpl
 import com.qbra.playlist.data.GameApi
 import com.qbra.playlist.data.GameRepositoryImpl
 import com.qbra.playlist.presentation.GameDetailScreen
 import com.qbra.playlist.presentation.GameDetailViewModel
 import com.qbra.playlist.presentation.GameListScreen
 import com.qbra.playlist.presentation.GameViewModel
+import com.qbra.playlist.presentation.auth.AuthViewModel
+import com.qbra.playlist.presentation.auth.LoginScreen
+import com.qbra.playlist.presentation.auth.RegisterScreen
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.qbra.playlist.data.LogRepositoryImpl
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
@@ -25,41 +32,93 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        //Retrofit
+        // API VE REPOSITORY KURULUMU
         val retrofit = Retrofit.Builder()
             .baseUrl("https://api.rawg.io/api/")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-
         val api = retrofit.create(GameApi::class.java)
-        val repository = GameRepositoryImpl(api)
+        val gameRepository = GameRepositoryImpl(api)
 
-        // ViewModel Factory
+        // FIREBASE VE AUTH REPOSITORY KURULUMU
+        val auth = FirebaseAuth.getInstance()
+        val firestore = FirebaseFirestore.getInstance()
+        val authRepository = AuthRepositoryImpl(auth, firestore)
+        val logRepository = LogRepositoryImpl(firestore)
+
+        // VIEW MODEL FACTORY
         val factory = object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 if (modelClass.isAssignableFrom(GameViewModel::class.java)) {
-                    return GameViewModel(repository) as T
+                    return GameViewModel(gameRepository) as T
                 }
                 if (modelClass.isAssignableFrom(GameDetailViewModel::class.java)) {
-                    return GameDetailViewModel(repository) as T
+                    return GameDetailViewModel(gameRepository, logRepository, authRepository) as T
+                }
+                if (modelClass.isAssignableFrom(AuthViewModel::class.java)) {
+                    return AuthViewModel(authRepository) as T
                 }
                 throw IllegalArgumentException("Bilinmeyen ViewModel sınıfı")
             }
         }
 
-        //UI ve Navigation
         setContent {
             val navController = rememberNavController()
 
-            NavHost(navController = navController, startDestination = "game_list") {
+            // AUTH ROUTING
+            val currentUser = authRepository.getCurrentUser()
+            val startDestination = if (currentUser != null) "game_list" else "login"
+
+            NavHost(navController = navController, startDestination = startDestination) {
+
+                composable("login") {
+                    val viewModel: AuthViewModel = viewModel(factory = factory)
+                    LoginScreen(
+                        viewModel = viewModel,
+                        onNavigateToRegister = { navController.navigate("register") },
+                        onLoginSuccess = {
+                            // Giriş başarılı Oyun listesine geç ama geri tuşuna basınca loginE dönmesini engelle
+                            navController.navigate("game_list") {
+                                popUpTo("login") { inclusive = true }
+                            }
+                        }
+                    )
+                }
+
+                composable("register") {
+                    val viewModel: AuthViewModel = viewModel(factory = factory)
+                    RegisterScreen(
+                        viewModel = viewModel,
+                        onNavigateToLogin = { navController.navigate("login") },
+                        onRegisterSuccess = {
+                            // Kayıt başarılı Oyun listesine geç kayıt ekranını geçmişten sil
+                            navController.navigate("game_list") {
+                                popUpTo("register") { inclusive = true }
+                                popUpTo("login") { inclusive = true }
+                            }
+                        }
+                    )
+                }
+
+                // OYUN ROTALARI
 
                 composable("game_list") {
-                    val viewModel: GameViewModel = viewModel(factory = factory)
+                    val gameViewModel: GameViewModel = viewModel(factory = factory)
+                    val authViewModel: AuthViewModel = viewModel(factory = factory)
+
                     GameListScreen(
-                        viewModel = viewModel,
+                        viewModel = gameViewModel,
                         onGameClick = { gameId ->
-                            // kullanıcı bir oyuna tıkladığında oyunun id'si detay ekranına yollanıyor
                             navController.navigate("game_detail/$gameId")
+                        },
+                        onLogoutClick = {
+                            authViewModel.signOut()
+                            navController.navigate("login") {
+                                popUpTo("game_list") { inclusive = true }
+                            }
+                        },
+                        onProfileClick = {
+                            // ileride profil rotasını yazılacak
                         }
                     )
                 }

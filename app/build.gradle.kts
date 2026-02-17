@@ -74,4 +74,5 @@ dependencies {
     implementation("com.google.firebase:firebase-auth")
     // Cloud Firestore
     implementation("com.google.firebase:firebase-firestore")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
 }

@@ -15,6 +15,8 @@ import coil.compose.AsyncImage
 import com.qbra.playlist.domain.Game
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.Person
 
 @Composable
 fun GameItem(
@@ -61,64 +63,90 @@ fun GameItem(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GameListScreen(
     viewModel: GameViewModel,
-    onGameClick: (Int) -> Unit
+    onGameClick: (Int) -> Unit,
+    onLogoutClick: () -> Unit,
+    onProfileClick: () -> Unit
 ) {
     val state = viewModel.state.value
     val searchQuery = viewModel.searchQuery.value
 
-    Column(modifier = Modifier.fillMaxSize()) {
-
-        OutlinedTextField(
-            value = searchQuery,
-            onValueChange = { viewModel.onSearchQueryChange(it) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            placeholder = { Text("Oyun Ara (Örn: GTA, Mario)...") },
-            singleLine = true,
-            trailingIcon = {
-                IconButton(onClick = { viewModel.searchGames() }) {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Ara"
-                    )
-                }
-            }
-        )
-
-        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-            if (state.games.isNotEmpty()) {
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    items(state.games.size) { index ->
-                        val game = state.games[index]
-
-                        if (index >= state.games.size - 1 && !state.isLoading) {
-                            viewModel.getGames(viewModel.searchQuery.value)
-                        }
-
-                        GameItem(
-                            game = game,
-                            onItemClick = { id -> onGameClick(id) }
-                        )
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("PlayList") },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                ),
+                actions = {
+                    // Profil Butonu
+                    IconButton(onClick = onProfileClick) {
+                        Icon(imageVector = Icons.Default.Person, contentDescription = "Profil")
+                    }
+                    // Çıkış Yap Butonu
+                    IconButton(onClick = onLogoutClick) {
+                        Icon(imageVector = Icons.Default.ExitToApp, contentDescription = "Çıkış Yap")
                     }
                 }
-            }
+            )
+        }
+    ) { paddingValues ->
 
-            if (state.error.isNotBlank()) {
-                Text(
-                    text = state.error,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(16.dp)
-                )
-            }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            // Arama Çubuğu
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { viewModel.onSearchQueryChange(it) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                placeholder = { Text("Oyun Ara (Örn: GTA, Mario)...") },
+                singleLine = true,
+                trailingIcon = {
+                    IconButton(onClick = { viewModel.searchGames() }) {
+                        Icon(imageVector = Icons.Default.Search, contentDescription = "Ara")
+                    }
+                }
+            )
 
-            if (state.isLoading) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            // Oyun Listesi
+            Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                if (state.games.isNotEmpty()) {
+                    LazyColumn(modifier = Modifier.fillMaxSize()) {
+                        items(state.games.size) { index ->
+                            val game = state.games[index]
+
+                            if (index >= state.games.size - 1 && !state.isLoading) {
+                                viewModel.getGames(viewModel.searchQuery.value)
+                            }
+
+                            GameItem(
+                                game = game,
+                                onItemClick = { id -> onGameClick(id) }
+                            )
+                        }
+                    }
+                }
+
+                if (state.error.isNotBlank()) {
+                    Text(
+                        text = state.error,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.align(Alignment.Center).padding(16.dp)
+                    )
+                }
+
+                if (state.isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                }
             }
         }
     }

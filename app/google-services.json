@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "374916770270",
+    "project_id": "playlist-4d719",
+    "storage_bucket": "playlist-4d719.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:374916770270:android:5dc6ab17e6e248a690d54f",
+        "android_client_info": {
+          "package_name": "com.qbra.playlist"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBsFNqSXYu9u10tucYF6QreUx3-aRCOVjY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
