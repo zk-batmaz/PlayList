@@ -13,7 +13,7 @@ class GameRepositoryImpl(
     override suspend fun getGames(searchQuery: String?, page: Int): Resource<List<Game>> {
         return try {
             val response = api.getGames(
-                apiKey = "API_KEY",
+                apiKey = "c2d7f4f17e944cc38286e17511ed477a",
                 searchQuery = searchQuery,
                 page = page
             )
@@ -29,7 +29,7 @@ class GameRepositoryImpl(
         return try {
             val response = api.getGameDetail(
                 id = id,
-                apiKey = "API_KEY"
+                apiKey = "c2d7f4f17e944cc38286e17511ed477a"
             )
             Resource.Success(response.toDomain())
         } catch (e: Exception) {
