@@ -8,4 +8,8 @@ interface AuthRepository {
     fun getCurrentUser(): User?
 
     suspend fun signOut()
+
+    suspend fun searchUsers(query: String): Resource<List<User>>
+
+    suspend fun getUserById(userId: String): Resource<User>
 }

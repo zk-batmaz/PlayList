@@ -25,6 +25,8 @@ import com.qbra.playlist.presentation.auth.RegisterScreen
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.qbra.playlist.data.LogRepositoryImpl
+import com.qbra.playlist.presentation.profile.ProfileScreen
+import com.qbra.playlist.presentation.profile.ProfileViewModel
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
@@ -50,13 +52,16 @@ class MainActivity : ComponentActivity() {
         val factory = object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 if (modelClass.isAssignableFrom(GameViewModel::class.java)) {
-                    return GameViewModel(gameRepository) as T
+                    return GameViewModel(gameRepository, authRepository) as T
                 }
                 if (modelClass.isAssignableFrom(GameDetailViewModel::class.java)) {
                     return GameDetailViewModel(gameRepository, logRepository, authRepository) as T
                 }
                 if (modelClass.isAssignableFrom(AuthViewModel::class.java)) {
                     return AuthViewModel(authRepository) as T
+                }
+                if (modelClass.isAssignableFrom(ProfileViewModel::class.java)) {
+                    return ProfileViewModel(authRepository, logRepository) as T
                 }
                 throw IllegalArgumentException("Bilinmeyen ViewModel sınıfı")
             }
@@ -118,7 +123,12 @@ class MainActivity : ComponentActivity() {
                             }
                         },
                         onProfileClick = {
-                            // ileride profil rotasını yazılacak
+                            // Kendi profilimize giderken ID gönderme
+                            navController.navigate("profile")
+                        },
+                        onUserClick = { clickedUserId ->
+                            // Başkasının profiline giderken onun ID'sini URL gibi sonuna ekle
+                            navController.navigate("profile?userId=$clickedUserId")
                         }
                     )
                 }
@@ -132,6 +142,28 @@ class MainActivity : ComponentActivity() {
                     GameDetailScreen(
                         viewModel = detailViewModel,
                         gameId = gameId
+                    )
+                }
+
+                // ? işareti bunun zorunlu olmadığını kendi profilimiz için boş olabileceğini belirtir
+                composable(
+                    route = "profile?userId={userId}",
+                    arguments = listOf(navArgument("userId") {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    })
+                ) { backStackEntry ->
+                    val targetUserId = backStackEntry.arguments?.getString("userId")
+                    val viewModel: ProfileViewModel = viewModel(factory = factory)
+
+                    ProfileScreen(
+                        viewModel = viewModel,
+                        userId = targetUserId,
+                        onNavigateBack = { navController.popBackStack() },
+                        onGameClick = { gameId ->
+                            navController.navigate("game_detail/$gameId")
+                        }
                     )
                 }
             }

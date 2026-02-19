@@ -74,4 +74,53 @@ class AuthRepositoryImpl(
     override suspend fun signOut() {
         auth.signOut()
     }
+
+    override suspend fun searchUsers(query: String): Resource<List<User>> {
+        return try {
+            if (query.isBlank()) return Resource.Success(emptyList())
+
+            val snapshot = firestore.collection("users")
+                .orderBy("username")
+                .startAt(query)
+                .endAt(query + "\uf8ff")
+                .get()
+                .await()
+
+            val users = snapshot.documents.mapNotNull { doc ->
+                val uid = doc.id
+                val username = doc.getString("username") ?: ""
+                val email = doc.getString("email") ?: ""
+
+                // DÜZELTME: İsimlendirilmiş argümanlar kullanarak eşleşmeyi garantiye alıyoruz
+                com.qbra.playlist.domain.User(
+                    uid = uid,
+                    username = username,
+                    email = email
+                )
+            }
+
+            Resource.Success(users)
+        } catch (e: Exception) {
+            Resource.Error(e.localizedMessage ?: "Kullanıcılar bulunamadı.")
+        }
+    }
+
+    override suspend fun getUserById(userId: String): Resource<User> {
+        return try {
+            val document = firestore.collection("users").document(userId).get().await()
+            if (document.exists()) {
+                val uid = document.id
+                val username = document.getString("username") ?: ""
+                val email = document.getString("email") ?: ""
+
+                Resource.Success(
+                    com.qbra.playlist.domain.User(uid = uid, username = username, email = email)
+                )
+            } else {
+                Resource.Error("Kullanıcı bulunamadı.")
+            }
+        } catch (e: Exception) {
+            Resource.Error(e.localizedMessage ?: "Bir hata oluştu.")
+        }
+    }
 }

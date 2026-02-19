@@ -6,4 +6,6 @@ interface LogRepository {
     suspend fun getGameStats(gameId: Int): Resource<GameStat>
 
     suspend fun getUserLogForGame(userId: String, gameId: Int): Resource<GameLog?>
+
+    suspend fun getUserLogs(userId: String): Resource<List<GameLog>>
 }

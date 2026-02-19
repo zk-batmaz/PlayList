@@ -69,7 +69,8 @@ fun GameListScreen(
     viewModel: GameViewModel,
     onGameClick: (Int) -> Unit,
     onLogoutClick: () -> Unit,
-    onProfileClick: () -> Unit
+    onProfileClick: () -> Unit,
+    onUserClick: (String) -> Unit
 ) {
     val state = viewModel.state.value
     val searchQuery = viewModel.searchQuery.value
@@ -83,11 +84,9 @@ fun GameListScreen(
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 ),
                 actions = {
-                    // Profil Butonu
                     IconButton(onClick = onProfileClick) {
                         Icon(imageVector = Icons.Default.Person, contentDescription = "Profil")
                     }
-                    // Çıkış Yap Butonu
                     IconButton(onClick = onLogoutClick) {
                         Icon(imageVector = Icons.Default.ExitToApp, contentDescription = "Çıkış Yap")
                     }
@@ -101,42 +100,87 @@ fun GameListScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Arama Çubuğu
+            // ARAMA ÇUBUĞU
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { viewModel.onSearchQueryChange(it) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
-                placeholder = { Text("Oyun Ara (Örn: GTA, Mario)...") },
+                placeholder = { Text("Oyun veya Kullanıcı Ara...") },
                 singleLine = true,
                 trailingIcon = {
-                    IconButton(onClick = { viewModel.searchGames() }) {
+                    IconButton(onClick = { viewModel.performSearch() }) { // DÜZELTME: Artık yönlendiriciyi çağırıyor
                         Icon(imageVector = Icons.Default.Search, contentDescription = "Ara")
                     }
                 }
             )
 
-            // Oyun Listesi
+            // SEKME TASARIMI (Oyunlar / Kullanıcılar)
+            TabRow(
+                selectedTabIndex = if (state.isSearchModeUsers) 1 else 0,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Tab(
+                    selected = !state.isSearchModeUsers,
+                    onClick = { viewModel.toggleSearchMode(false) },
+                    text = { Text("Oyunlar") }
+                )
+                Tab(
+                    selected = state.isSearchModeUsers,
+                    onClick = { viewModel.toggleSearchMode(true) },
+                    text = { Text("Kullanıcılar") }
+                )
+            }
+
+            // DİNAMİK LİSTE KISMI
             Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
-                if (state.games.isNotEmpty()) {
-                    LazyColumn(modifier = Modifier.fillMaxSize()) {
-                        items(state.games.size) { index ->
-                            val game = state.games[index]
 
-                            if (index >= state.games.size - 1 && !state.isLoading) {
-                                viewModel.getGames(viewModel.searchQuery.value)
+                if (state.isSearchModeUsers) {
+                    // KULLANICI LİSTESİ
+                    if (state.isUserLoading) {
+                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                    } else if (state.users.isEmpty() && searchQuery.isNotBlank()) {
+                        Text("Kullanıcı bulunamadı.", modifier = Modifier.align(Alignment.Center))
+                    } else {
+                        LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp)) {
+                            items(state.users.size) { index ->
+                                val user = state.users[index]
+                                Card(
+                                    onClick = { onUserClick(user.uid) }, // Kullanıcıya tıklama eylemi
+                                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                                ) {
+                                    Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Default.Person, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                                        Spacer(modifier = Modifier.width(16.dp))
+                                        Text(text = user.username, style = MaterialTheme.typography.titleMedium)
+                                    }
+                                }
                             }
+                        }
+                    }
+                } else {
+                    // OYUN LİSTESİ
+                    if (state.games.isNotEmpty()) {
+                        LazyColumn(modifier = Modifier.fillMaxSize()) {
+                            items(state.games.size) { index ->
+                                val game = state.games[index]
 
-                            GameItem(
-                                game = game,
-                                onItemClick = { id -> onGameClick(id) }
-                            )
+                                if (index >= state.games.size - 1 && !state.isLoading) {
+                                    viewModel.getGames(viewModel.searchQuery.value)
+                                }
+
+                                GameItem(
+                                    game = game,
+                                    onItemClick = { id -> onGameClick(id) }
+                                )
+                            }
                         }
                     }
                 }
 
-                if (state.error.isNotBlank()) {
+                if (state.error.isNotBlank() && !state.isSearchModeUsers) {
                     Text(
                         text = state.error,
                         color = MaterialTheme.colorScheme.error,
@@ -144,7 +188,7 @@ fun GameListScreen(
                     )
                 }
 
-                if (state.isLoading) {
+                if (state.isLoading && !state.isSearchModeUsers) {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
             }

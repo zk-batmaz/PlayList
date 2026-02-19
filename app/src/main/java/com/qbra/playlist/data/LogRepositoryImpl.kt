@@ -88,4 +88,27 @@ class LogRepositoryImpl(
             e.printStackTrace()
         }
     }
+
+    // KULLANICININ TÜM KAYITLARINI GETİRME
+    override suspend fun getUserLogs(userId: String): Resource<List<GameLog>> {
+        return try {
+            // Sadece bu kullanıcıya ait olan logları filtreleyerek çek
+            val querySnapshot = firestore.collection("game_logs")
+                .whereEqualTo("userId", userId)
+                .get()
+                .await()
+
+            // Mapping
+            val logs = querySnapshot.documents.mapNotNull { document ->
+                document.toObject(GameLog::class.java)
+            }
+
+            // En son eklediği oyun en üstte görünsün diye zamana göre tersten sırala
+            val sortedLogs = logs.sortedByDescending { it.timestamp }
+
+            Resource.Success(sortedLogs)
+        } catch (e: Exception) {
+            Resource.Error(e.localizedMessage ?: "Oyun geçmişi yüklenemedi.")
+        }
+    }
 }
