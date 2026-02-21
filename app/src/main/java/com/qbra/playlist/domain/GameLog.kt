@@ -8,5 +8,6 @@ data class GameLog(
     val gameImageUrl: String = "",      // Profil sayfası için oyunun resmi
     val rating: Double? = null,    // Puan (Zorunlu değil, o yüzden nullable)
     val review: String? = null,    // Yorum (Zorunlu değil, o yüzden nullable)
-    val timestamp: Long = System.currentTimeMillis() // Ne zaman kaydedildi?
+    val timestamp: Long = System.currentTimeMillis(), // Ne zaman kaydedildi?
+    val username: String = ""
 )

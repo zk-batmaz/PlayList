@@ -17,6 +17,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
 
 @Composable
 fun GameItem(
@@ -109,6 +112,10 @@ fun GameListScreen(
                     .padding(16.dp),
                 placeholder = { Text("Oyun veya Kullanıcı Ara...") },
                 singleLine = true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(
+                    onSearch = { viewModel.performSearch() }
+                ),
                 trailingIcon = {
                     IconButton(onClick = { viewModel.performSearch() }) { // DÜZELTME: Artık yönlendiriciyi çağırıyor
                         Icon(imageVector = Icons.Default.Search, contentDescription = "Ara")
@@ -147,7 +154,7 @@ fun GameListScreen(
                             items(state.users.size) { index ->
                                 val user = state.users[index]
                                 Card(
-                                    onClick = { onUserClick(user.uid) }, // Kullanıcıya tıklama eylemi
+                                    onClick = { onUserClick(user.uid) },
                                     modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
                                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                                 ) {

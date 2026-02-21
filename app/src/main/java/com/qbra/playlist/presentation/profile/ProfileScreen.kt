@@ -1,5 +1,6 @@
 package com.qbra.playlist.presentation.profile
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -9,6 +10,10 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,6 +32,7 @@ fun ProfileScreen(
     onGameClick: (Int) -> Unit
 ) {
     val state = viewModel.state.value
+    var selectedLogForDialog by remember { mutableStateOf<com.qbra.playlist.domain.GameLog?>(null) }
 
     LaunchedEffect(key1 = userId) {
         viewModel.loadProfile(userId)
@@ -113,6 +119,54 @@ fun ProfileScreen(
                                             style = MaterialTheme.typography.bodySmall,
                                             fontStyle = FontStyle.Italic,
                                             maxLines = 2 // Yorum çok uzunsa kartı bozmasın diye 2 satırla sınırla
+                                        )
+                                    }
+
+                                    selectedLogForDialog?.let { log ->
+                                        AlertDialog(
+                                            onDismissRequest = { selectedLogForDialog = null }, // Dışarı tıklayınca kapat
+                                            title = { Text(text = log.gameName, fontWeight = FontWeight.Bold) },
+                                            text = {
+                                                Column {
+                                                    // Oyun Resmi (Tıklanabilir)
+                                                    AsyncImage(
+                                                        model = log.gameImageUrl,
+                                                        contentDescription = log.gameName,
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .height(180.dp)
+                                                            .clickable { // Resme tıklayınca dialogu kapat ve oyun detayına git!
+                                                                selectedLogForDialog = null
+                                                                onGameClick(log.gameId)
+                                                            },
+                                                        contentScale = ContentScale.Crop
+                                                    )
+
+                                                    Spacer(modifier = Modifier.height(16.dp))
+
+                                                    if (log.rating != null) {
+                                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                                            Icon(Icons.Default.Star, contentDescription = null, tint = Color(0xFFFFC107))
+                                                            Text(text = " Verdiği Puan: ${log.rating} / 5.0", fontWeight = FontWeight.Bold)
+                                                        }
+                                                        Spacer(modifier = Modifier.height(8.dp))
+                                                    }
+
+                                                    // Tam yorumu gösteren ve kaydırılabilir alan
+                                                    Text(
+                                                        text = if (!log.review.isNullOrBlank()) "\"${log.review}\"" else "Bu oyun için yorum yazılmamış.",
+                                                        fontStyle = FontStyle.Italic,
+                                                        style = MaterialTheme.typography.bodyMedium
+                                                    )
+                                                    Spacer(modifier = Modifier.height(8.dp))
+                                                    Text(text = "* Detaylara gitmek için görsele tıklayın.", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                                                }
+                                            },
+                                            confirmButton = {
+                                                Button(onClick = { selectedLogForDialog = null }) {
+                                                    Text("Kapat")
+                                                }
+                                            }
                                         )
                                     }
                                 }

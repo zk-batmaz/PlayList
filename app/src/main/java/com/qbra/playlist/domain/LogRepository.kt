@@ -8,4 +8,6 @@ interface LogRepository {
     suspend fun getUserLogForGame(userId: String, gameId: Int): Resource<GameLog?>
 
     suspend fun getUserLogs(userId: String): Resource<List<GameLog>>
+
+    suspend fun getLogsForGame(gameId: Int): Resource<List<GameLog>>
 }

@@ -111,4 +111,20 @@ class LogRepositoryImpl(
             Resource.Error(e.localizedMessage ?: "Oyun geçmişi yüklenemedi.")
         }
     }
+
+    override suspend fun getLogsForGame(gameId: Int): Resource<List<GameLog>> {
+        return try {
+            val querySnapshot = firestore.collection("game_logs")
+                .whereEqualTo("gameId", gameId)
+                .get()
+                .await()
+
+            val logs = querySnapshot.documents.mapNotNull { it.toObject(GameLog::class.java) }
+            val sortedLogs = logs.sortedByDescending { it.timestamp }
+
+            Resource.Success(sortedLogs)
+        } catch (e: Exception) {
+            Resource.Error("Topluluk yorumları getirilemedi.")
+        }
+    }
 }

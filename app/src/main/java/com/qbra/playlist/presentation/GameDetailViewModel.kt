@@ -31,7 +31,7 @@ class GameDetailViewModel(
             // Firestore'dan oyunun genel istatistiklerini çek
             val statResult = logRepository.getGameStats(id)
 
-            // Kullanıcı giriş yapmışsa, bu oyuna ait kendi kaydını çek
+            // Kullanıcı giriş yapmışsa bu oyuna ait kendi kaydını çek
             val currentUser = authRepository.getCurrentUser()
             var userLogResult: GameLog? = null
 
@@ -60,6 +60,15 @@ class GameDetailViewModel(
                 }
                 is Resource.Loading -> { }
             }
+
+            when (val communityResult = logRepository.getLogsForGame(id)) {
+                is Resource.Success -> {
+                    val allLogs = communityResult.data ?: emptyList()
+                    val reviewsOnly = allLogs.filter { !it.review.isNullOrBlank() }
+                    _state.value = _state.value.copy(communityLogs = reviewsOnly)
+                }
+                else -> { }
+            }
         }
     }
 
@@ -70,13 +79,20 @@ class GameDetailViewModel(
         viewModelScope.launch {
             _state.value = _state.value.copy(isLogSaving = true)
 
-            val log = GameLog(
+            var currentUsername = "Anonim"
+            val userResult = authRepository.getUserById(currentUser.uid)
+            if (userResult is Resource.Success) {
+                currentUsername = userResult.data?.username ?: "Anonim"
+            }
+
+            val log = com.qbra.playlist.domain.GameLog(
                 userId = currentUser.uid,
                 gameId = game.id,
                 gameName = game.name,
-                gameImageUrl = game.imageUrl,
+                gameImageUrl = game.imageUrl ?: "",
                 rating = rating,
-                review = if (review.isNullOrBlank()) null else review
+                review = if (review.isNullOrBlank()) null else review,
+                username = currentUsername
             )
 
             when (val result = logRepository.saveGameLog(log)) {

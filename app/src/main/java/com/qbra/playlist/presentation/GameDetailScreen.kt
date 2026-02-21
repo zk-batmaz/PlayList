@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -72,7 +73,7 @@ fun GameDetailScreen(
                                 if (state.isLogSaving) {
                                     CircularProgressIndicator(modifier = Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary)
                                 } else {
-                                    // Eğer veritabanından kullanıcı kaydı geldiyse buton adını Düzenle yap
+                                    // Eğer veritabanından kullanıcı kaydı geldiyse buton adını düzenle yap
                                     Text(if (state.userLog != null) "Kaydımı Düzenle" else "Oynadım / Logla")
                                 }
                             }
@@ -147,12 +148,54 @@ fun GameDetailScreen(
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(text = game.description)
                         Spacer(modifier = Modifier.height(32.dp))
+
+                        // TOPLULUK YORUMLARI
+                        if (state.communityLogs.isNotEmpty()) {
+                            Text("Topluluk Yorumları", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            state.communityLogs.forEach { log ->
+                                Card(
+                                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                                ) {
+                                    Column(modifier = Modifier.padding(12.dp)) {
+
+                                        // KULLANICI ADI GÖSTERİMİ
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(
+                                                imageVector = Icons.Default.Person,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text(
+                                                text = if (log.username.isNotBlank()) log.username else "Anonim",
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.primary,
+                                                style = MaterialTheme.typography.labelLarge
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.height(6.dp))
+
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(Icons.Default.Star, contentDescription = null, tint = Color(0xFFFFC107), modifier = Modifier.size(16.dp))
+                                            Text(text = " ${log.rating ?: 0.0} / 5.0", fontWeight = FontWeight.Bold)
+                                        }
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(text = "\"${log.review}\"", fontStyle = FontStyle.Italic)
+                                    }
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(32.dp))
+                        }
                     }
                 }
             }
         }
 
-        // LOGLAMA PENCERESİ (Dialog)
+        // LOGLAMA PENCERESİ
         if (showLogDialog) {
             LogGameDialog(
                 initialRating = state.userLog?.rating,

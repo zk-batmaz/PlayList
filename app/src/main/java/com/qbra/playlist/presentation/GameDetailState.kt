@@ -10,5 +10,6 @@ data class GameDetailState(
     val error: String = "",
     val userLog: GameLog? = null,
     val gameStat: GameStat? = null,
-    val isLogSaving: Boolean = false // Kaydetme butonuna basıldığında dönen animasyon için
+    val isLogSaving: Boolean = false, // Kaydetme butonuna basıldığında dönen animasyon için
+    val communityLogs: List<GameLog> = emptyList()
 )
