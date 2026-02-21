@@ -1,4 +1,4 @@
-# PlayList 🎮
+# PlayList
 
 <div align="center">
   <img src="screenshots/login_page.jpg" width="220"/>
