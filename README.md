@@ -8,7 +8,7 @@
   <img src="screenshots/search_user_page.jpg" width="220"/>
   <img src="screenshots/search_game_page.jpg" width="220"/>
   <img src="screenshots/game_detail_page.jpg" width="220"/>
-  <img src="screenshots/revie_page.jpg" width="220"/>
+  <img src="screenshots/review_page.jpg" width="220"/>
 </div>
 
 ## Overview
