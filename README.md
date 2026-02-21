@@ -49,7 +49,7 @@ The app strictly follows **Clean Architecture** principles, divided into `Presen
 ### Steps
 1. Clone the repository:
    ```bash
-   git clone [https://github.com/](https://github.com/)[zk-batmaz]/PlayList.git
+   git clone https://github.com/zk-batmaz/PlayList.git
 2. Open the project in Android Studio.
 
 3. Configure API Key: Add your free RAWG API Key directly into the `GameRepositoryImpl.kt` file (or your `GameApi` interface) where the network requests are executed.
