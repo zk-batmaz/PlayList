@@ -18,6 +18,7 @@ PlayList is an Android application designed for gamers to discover, log, and rat
 </div>
 
 <br>
+
 * **Game Logging & Rating:** Users can easily track their gaming journey by logging played games, rating them out of 5.0, and writing personal reviews.
 
 <div align="center">
